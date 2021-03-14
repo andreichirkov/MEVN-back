@@ -1,5 +1,6 @@
 module.exports = {
   category: require ('./category.controller'),
   product: require ('./product.controller'),
-  payment: require ('./payment.controller')
+  payment: require ('./payment.controller'),
+  auth: require ('./auth.controller')
 }

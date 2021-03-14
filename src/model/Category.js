@@ -1,7 +1,7 @@
 const {model, Schema, Schema: {Types: {ObjectId}}} = require('mongoose')
 
 //это модель в mongoose, в genericCrud попадет например это
-const shema = new Schema({
+const schema = new Schema({
   title: {
     type: String,
     default: ''
@@ -18,4 +18,4 @@ const shema = new Schema({
   ]
 })
 
-module.exports = model('Category', shema)
+module.exports = model('Category', schema)

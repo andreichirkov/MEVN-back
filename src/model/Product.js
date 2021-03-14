@@ -3,7 +3,7 @@
 const {model, Schema, Schema: {Types: {ObjectId}}} = require('mongoose')
 
 //данные которые наследуются от Schema от большого класса mongoose
-const shema = new Schema({
+const schema = new Schema({
   title: {
     type: String,
     default: ''
@@ -30,4 +30,4 @@ const shema = new Schema({
   }
 })
 
-module.exports = model('Product', shema)
+module.exports = model('Product', schema)
