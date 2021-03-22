@@ -1,8 +1,72 @@
 require('dotenv').config()
 const jwt = require('jsonwebtoken')
-const { User } = require('../model')
+//импортируем схемы
+const { User, Token } = require('../model')
 
 module.exports = {
+  //логаут нужно делать, чтобы если кто то украл один токен,
+  //не смог им воспользоваться, нужно 2 (делается по userId)
+  async logout({ body: {refreshToken} }, res) {
+    //удаляем этот рефрешТокен (из базы)
+    const foundToken = await Token.findOne({ token: refreshToken })
+
+    if (!foundToken) {
+      return res.status(403).send({
+        message: 'Пользователь не авторизован'
+      })
+    }
+
+    await Token.findByIdAndDelete(foundToken._id)
+    
+    return res.status(200).send({
+      message: 'Вы разлогинены'
+    })
+  },
+
+
+  //сначала достаем из body рефрешТокен
+  async refreshToken({ body: {refreshToken} }, res) {
+    if (!refreshToken) {
+      return res.status(403).send({
+        message: 'Действие запрещено 1'
+      })
+    }
+
+    //при логине создается рефрешТокен и сохраняется в базу
+    //проверка есть ли он, и сможет ли он обновить аксессТокен
+    const currentToken = await Token.findOne({ token: refreshToken })
+    
+    //если есть то продолжаем или если нету
+    if (!currentToken) {
+      return res.status(403).send({
+        message: 'Действие запрещено 2'
+      })
+    }
+
+    jwt.verify(refreshToken, process.env.JWT_SECRET_REFRESH, (err, user) => {
+      if (err) {
+        return res.status(403).send({ 
+          message: 'Действие запрещено 3'
+        })
+      }
+      console.log(user, 'user');
+    
+      //если ок то в user вернется то что мы как раз шифровали
+      const accessToken = jwt.sign({
+        userId: user._id,
+        email: user.email
+      },
+      process.env.JWT_SECRET, {
+        expiresIn: '5m'
+      })
+
+      return res.status(200).send({
+        accessToken,
+        email: user.email
+      })
+    })
+  },
+
   //req первый аргумент, из бади берем узер и пасс
   async login({ body: { email, password } }, res) {
     try {
@@ -30,10 +94,46 @@ module.exports = {
       const accessToken = jwt.sign({
         userId: foundUser._id,
         email: foundUser.email
-      }, process.env.JWT_SECRET)
+      },
+      process.env.JWT_SECRET, {
+        expiresIn: '1m'
+      })
 
+      //рефреш токен
+      const refreshToken = jwt.sign({
+        userId: foundUser._id,
+        email: foundUser.email
+      }, 
+      process.env.JWT_SECRET_REFRESH)
+
+      //если пользователь уже существует
+      const foundToken = await Token.findOne({
+        user: foundUser._id
+      })
+      //то обновляем текущий токен не создавая новый
+      if (foundToken) {
+        await Token.findByIdAndUpdate(foundToken._id, { token: refreshToken })
+        //возвращаем токены на фронтенд
+        return res.status(200).send({
+          accessToken,
+          refreshToken,
+          email: foundUser.email
+        })
+      }
+
+      //в схеме указано ref: 'User' и item тут token: бла и _id: бла
+      //то есть ссылаемся на ObjectId юзера
+      const item = new Token({
+        token: refreshToken,
+        user: foundUser._id
+      })
+      // сохраняем токен и юзера в базу
+      await item.save()
+
+      //возвращаем токены на фронтенд
       return res.status(200).send({
         accessToken,
+        refreshToken,
         email: foundUser.email
       })
     } catch(err) {
