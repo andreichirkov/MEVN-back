@@ -1,10 +1,15 @@
 const genericCrud = require('./generic.controller')
 const { Product } = require('../model')
 
+const relations = {
+    getAll: 'category',
+    get: 'category'
+  }
+
 //все функции которые присутствуют generic.controller добавляются в этот объект
 //СОЗДАЕМ НОВУЮ КОПИЮ ФУНКЦИЙ ЧТОБЫ НЕ ПИСАТЬ ЗАНОВО
 //сюда можно написать свою функцию create(){} и она ПЕРЕЗАПИШЕТ основную
 //сокращение кода 80lvl
 module.exports = {
-    ...genericCrud(Product)
+    ...genericCrud(Product, relations)
 }

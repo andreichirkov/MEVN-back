@@ -16,7 +16,7 @@ const schema = new Schema({
     type: Number,
     default: ''
   },
-  amout: {
+  amount: {
     type: Number,
     default: ''
   },
