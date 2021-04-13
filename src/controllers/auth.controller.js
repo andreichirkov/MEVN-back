@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken')
 //импортируем схемы
 const { User, Token } = require('../model')
 
+const ACCESS_TOKEN_LIFE = '60m'
+
 module.exports = {
   //логаут нужно делать, чтобы если кто то украл один токен,
   //не смог им воспользоваться, нужно 2 (делается по userId)
@@ -57,7 +59,7 @@ module.exports = {
         email: user.email
       },
       process.env.JWT_SECRET, {
-        expiresIn: '5m'
+        expiresIn: ACCESS_TOKEN_LIFE
       })
 
       return res.status(200).send({
@@ -96,7 +98,7 @@ module.exports = {
         email: foundUser.email
       },
       process.env.JWT_SECRET, {
-        expiresIn: '1m'
+        expiresIn: ACCESS_TOKEN_LIFE
       })
 
       //рефреш токен
